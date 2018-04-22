@@ -1,0 +1,9 @@
+flags: {}
+packages:
+- .
+extra-deps:
+- api-builder-0.14.0.0
+- free-4.12.4
+- http-types-0.10
+- reddit-0.2.2.2
+resolver: lts-11.2
