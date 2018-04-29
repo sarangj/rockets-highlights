@@ -9,4 +9,4 @@ run = do
   postsOrError <- User.run $ RocketsHighlight.findAll
   putStrLn $ case postsOrError of
     Left error -> show error
-    Right posts -> show $ map Reddit.permalink posts
+    Right posts -> show $ map (mappend "reddit.com" . Reddit.permalink) posts
