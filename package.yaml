@@ -47,7 +47,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - rockets-stream
-  
+
   rockets-stream:
     main:                XPost.hs
     source-dirs:         app

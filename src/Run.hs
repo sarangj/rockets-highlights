@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Run 
+module Run
   ( ActionType(..)
   , run
   ) where
@@ -20,7 +20,7 @@ run actionType = do
   case postsOrError of
     Left error -> putStrLn $ show error
     Right posts -> runImpl actionType posts
-    
+
 runImpl :: ActionType -> [Reddit.Post] -> IO ()
 runImpl DryRun = mapM_ (putStrLn . show . mappend "reddit.com" . Reddit.permalink)
 runImpl XPost = \posts -> do
@@ -29,7 +29,6 @@ runImpl XPost = \posts -> do
   _ <- User.run $ copyAndSubmitPosts targetSR posts
   pure ()
 
-  
 -- | Hide this in a module
 config :: IO Config
 config = load [Required "$(CONFIGS)/reddit-signin.cfg"]
