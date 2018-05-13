@@ -7,7 +7,7 @@ import qualified Reddit.User as User
 
 run :: IO ()
 run = do
-  postsOrError <- User.run $ RocketsHighlight.findAll
+  postsOrError <- User.run RocketsHighlight.findAll
   case postsOrError of
     Left error -> putStrLn $ show error
     Right posts -> mapM_ (putStrLn . show . mappend "reddit.com" . Reddit.permalink) posts
