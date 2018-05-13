@@ -37,10 +37,22 @@ library:
   source-dirs: src
 
 executables:
-  rockets-stream-exe:
-    main:                Main.hs
+  rockets-stream-dry-run:
+    main:                DryRun.hs
     source-dirs:         app
     ghc-options:
+    - -main-is DryRun
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - rockets-stream
+  
+  rockets-stream:
+    main:                XPost.hs
+    source-dirs:         app
+    ghc-options:
+    - -main-is XPost
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
