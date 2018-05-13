@@ -21,8 +21,11 @@ run actionType = do
     Right posts -> runImpl actionType posts
 
 runImpl :: ActionType -> [Reddit.Post] -> IO ()
-runImpl DryRun = mapM_ (putStrLn . show . mappend "reddit.com" . Reddit.permalink)
-runImpl XPost = \posts -> do
+runImpl _ [] = putStrLn "No posts found!"
+runImpl DryRun ps = mapM_ (putStrLn . show . mappend "reddit.com" . Reddit.permalink) ps
+runImpl XPost ps = do
   targetSR <- Config.targetSR
-  _ <- User.run $ copyAndSubmitPosts targetSR posts
-  pure ()
+  postResult <- User.run $ copyAndSubmitPosts targetSR ps
+  case postResult of
+    Left apiError -> putStrLn $ show apiError
+    Right res -> mapM_ (displayResult . snd) res
