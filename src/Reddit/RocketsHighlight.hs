@@ -12,6 +12,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time.Clock
 import qualified Reddit.Actions.Search as RedditSearch
+import qualified Reddit.Constants as Constants
 import qualified Reddit.Types.Post as Reddit
 import qualified Reddit.Types.Listing as Reddit
 import qualified Reddit.Types.SearchOptions as RedditSearch
@@ -37,7 +38,7 @@ findAfter postID = do
         { pagination = Just (Before postID)
         , limit = Just 100
         }
-      sr = Just (Subreddit.R "nba")
+      sr = Just Constants.nbaSubreddit
 
 latestLikelyGameThread :: Monad m => RedditT m (Maybe Reddit.PostID)
 latestLikelyGameThread = do 
@@ -45,7 +46,7 @@ latestLikelyGameThread = do
   pure $ Reddit.postID <$> post 
   where 
     search = "Game Thread Rockets"
-    sr = Just (Subreddit.R "nba")
+    sr = Just Constants.nbaSubreddit
     firstCandidate :: PostListing -> Maybe Post
     firstCandidate = find (Text.isInfixOf "GAME THREAD" . Reddit.title) . Reddit.contents
 
