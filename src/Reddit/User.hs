@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reddit.User (run) where
+module Reddit.User where
 
 import Prelude
 import Control.Monad.IO.Class
@@ -19,3 +19,7 @@ run action = do
         { loginMethod = Credentials user pass
         , customUserAgent = Just "github.com/sarangj"
         }
+
+handleResult :: Show a => Either (APIError RedditError) a -> IO ()
+handleResult (Left err) = putStrLn $ show err
+handleResult (Right r) = putStrLn $ show r
