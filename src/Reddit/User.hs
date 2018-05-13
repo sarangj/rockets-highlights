@@ -3,10 +3,9 @@ module Reddit.User (run) where
 
 import Prelude
 import Control.Monad.IO.Class
-import Data.Configurator
-import Data.Configurator.Types
 import Data.Default
 import Reddit
+import qualified Reddit.Config as Config
 
 run :: RedditT IO a -> IO (Either (APIError RedditError) a)
 run action = do
@@ -14,13 +13,9 @@ run action = do
   runRedditWith opts action
   where
     options = do
-      conf <- config
-      user <- require conf "user"
-      pass <- require conf "pass"
+      user <- Config.user
+      pass <- Config.pass
       pure $ def
         { loginMethod = Credentials user pass
         , customUserAgent = Just "github.com/sarangj"
         }
-
-config :: IO Config
-config = load [Required "$(CONFIGS)/reddit-signin.cfg"]
