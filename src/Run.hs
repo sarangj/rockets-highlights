@@ -10,6 +10,7 @@ import Reddit.MakePosts
 import qualified Reddit.Types.Post as Reddit
 import qualified Reddit.Types.Subreddit as Subreddit
 import qualified Reddit.User as User
+import Util (ask, Answer(..))
 
 data ActionType = DryRun | XPost
 
@@ -22,10 +23,22 @@ run actionType = do
 
 runImpl :: ActionType -> [Reddit.Post] -> IO ()
 runImpl _ [] = putStrLn "No posts found!"
-runImpl DryRun ps = mapM_ (putStrLn . show . mappend "reddit.com" . Reddit.permalink) ps
+runImpl DryRun ps = mapM_ displayPost ps
 runImpl XPost ps = do
+  putStrLn "Posts:"
+  mapM_ displayPost ps 
+  answer <- ask "Look good?"
+  case answer of
+    Yes -> submitPosts ps
+    No -> putStrLn "aborted"
+
+submitPosts :: [Reddit.Post] -> IO ()
+submitPosts ps = do
   targetSR <- Config.targetSR
   postResult <- User.run $ copyAndSubmitPosts targetSR ps
   case postResult of
     Left apiError -> putStrLn $ show apiError
     Right res -> mapM_ (displayResult . snd) res
+
+displayPost :: Reddit.Post -> IO ()
+displayPost = putStrLn . show . mappend "reddit.com" . Reddit.permalink
