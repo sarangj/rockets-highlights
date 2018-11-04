@@ -22,7 +22,9 @@ mkPost srName gameThread highlights = Reddit.submitSelfPost srName title body
   where
     title = Reddit.title gameThread
     threadBody = mkLinkMarkdown (Reddit.permalink gameThread) "Game Thread"
-    body = Text.intercalate "\n" $ threadBody : map formatHighlightForBody highlights
+    -- Reddit markdown needs a blank line between each entry to actually render
+    -- a new line, so append 2 new lines in between each entry
+    body = Text.intercalate "\n\n" $ threadBody : map formatHighlightForBody highlights
 
 -- |
 -- Maybe TODO: Pass around links earlier in the pipeline
