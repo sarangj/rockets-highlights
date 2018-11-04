@@ -4,6 +4,7 @@ module Reddit.MakePosts where
 import Prelude
 import Control.Monad (liftM)
 import Control.Monad.IO.Class
+import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -20,11 +21,17 @@ mkPost
   -> RedditT m Reddit.PostID
 mkPost srName gameThread highlights = Reddit.submitSelfPost srName title body
   where
-    title = Reddit.title gameThread
+    title = newThreadTitle gameThread
     threadBody = mkLinkMarkdown (Reddit.permalink gameThread) "Game Thread"
     -- Reddit markdown needs a blank line between each entry to actually render
     -- a new line, so append 2 new lines in between each entry
     body = Text.intercalate "\n\n" $ threadBody : map formatHighlightForBody highlights
+
+newThreadTitle :: Reddit.Post -> Text
+newThreadTitle post = Text.strip $ fromMaybe title $ Text.stripPrefix prefix title
+  where
+    title = Reddit.title post
+    prefix = "GAME THREAD:"
 
 -- |
 -- Maybe TODO: Pass around links earlier in the pipeline
