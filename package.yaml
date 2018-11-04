@@ -29,6 +29,7 @@ dependencies:
 - http-types
 - reddit
 - text
+- text-format
 - time
 - unordered-containers
 - vector

@@ -4,7 +4,9 @@ module Run
   , run
   ) where
 
+import Data.Monoid ((<>))
 import qualified Reddit.Config as Config
+import Reddit.RocketsHighlight (SearchResult(..))
 import qualified Reddit.RocketsHighlight as RocketsHighlight
 import Reddit.MakePosts
 import qualified Reddit.Types.Post as Reddit
@@ -16,29 +18,31 @@ data ActionType = DryRun | XPost
 
 run :: ActionType -> IO ()
 run actionType = do
-  postsOrError <- User.run RocketsHighlight.findAll
-  case postsOrError of
+  searchResultOrError <- User.run RocketsHighlight.doSearch
+  putStrLn "Did search"
+  case searchResultOrError of
     Left error -> putStrLn $ show error
-    Right posts -> runImpl actionType posts
+    Right res -> runImpl actionType res
 
-runImpl :: ActionType -> [Reddit.Post] -> IO ()
-runImpl _ [] = putStrLn "No posts found!"
-runImpl DryRun ps = mapM_ displayPost ps
-runImpl XPost ps = do
+runImpl :: ActionType -> SearchResult -> IO ()
+runImpl DryRun (HighlightsFor _ highlights) = mapM_ displayPost highlights
+runImpl _ Empty = putStrLn "No Game Thread Found!"
+runImpl XPost (HighlightsFor _ []) = putStrLn "No Posts Found!"
+runImpl XPost (HighlightsFor gameThread highlights) = do
   putStrLn "Posts:"
-  mapM_ displayPost ps 
+  mapM_ displayPost highlights
   answer <- ask "Look good?"
   case answer of
-    Yes -> submitPosts ps
+    Yes -> submitPosts gameThread highlights
     No -> putStrLn "aborted"
 
-submitPosts :: [Reddit.Post] -> IO ()
-submitPosts ps = do
+submitPosts :: Reddit.Post -> [Reddit.Post] -> IO ()
+submitPosts gameThread highlights = do
   targetSR <- Config.targetSR
-  postResult <- User.run $ copyAndSubmitPosts targetSR ps
+  postResult <- User.run $ mkPost targetSR gameThread highlights
   case postResult of
     Left apiError -> putStrLn $ show apiError
-    Right res -> mapM_ (displayResult . snd) res
+    Right postID -> putStrLn $ "Submitted " <> (show postID)
 
 displayPost :: Reddit.Post -> IO ()
 displayPost = putStrLn . show . mappend "reddit.com" . Reddit.permalink

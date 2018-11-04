@@ -12,28 +12,28 @@ import qualified Reddit.Types.Post as Reddit
 import Reddit.Types (RedditT, SubredditName)
 import Util
 
-type SubmissionResult = Either Text Reddit.PostID 
-
-copyAndSubmitPosts 
+mkPost
   :: MonadIO m
-  => SubredditName 
-  -> [Reddit.Post] 
-  -> RedditT m [(Reddit.PostID, SubmissionResult)] 
-copyAndSubmitPosts srName = mapM toResultPair
-  where 
-    toResultPair p = (,) (Reddit.postID p) <$> mkLinkXPost srName p
-
-mkLinkXPost 
-  :: MonadIO m 
   => SubredditName
-  -> Reddit.Post 
-  -> RedditT m SubmissionResult
-mkLinkXPost srName post = case Reddit.content post of 
-  Reddit.Link t -> do
-    pID <- Reddit.submitLink srName (Reddit.title post) t  
-    pure (Right pID)
-  c -> pure . Left $ "Expected a link post, got a " <> (Text.pack (show c)) 
+  -> Reddit.Post
+  -> [Reddit.Post]
+  -> RedditT m Reddit.PostID
+mkPost srName gameThread highlights = Reddit.submitSelfPost srName title body
+  where
+    title = Reddit.title gameThread
+    threadBody = mkLinkMarkdown (Reddit.permalink gameThread) "Game Thread"
+    body = Text.intercalate "\n" $ threadBody : map formatHighlightForBody highlights
 
-displayResult :: SubmissionResult -> IO ()
-displayResult (Left err) = putTextLn err
-displayResult (Right postID) = putStrLn $ "Submitted " <> (show postID)
+-- |
+-- Maybe TODO: Pass around links earlier in the pipeline
+--
+formatHighlightForBody :: Reddit.Post -> Text
+formatHighlightForBody highlightPost = case Reddit.content highlightPost of
+  Reddit.Link t -> mkLinkMarkdown t title <> " " <> mkLinkMarkdown permalink "Comments"
+  _ -> mkLinkMarkdown permalink title
+  where
+    permalink = Reddit.permalink highlightPost
+    title = Reddit.title highlightPost
+
+mkLinkMarkdown :: Text -> Text -> Text
+mkLinkMarkdown url display = Text.concat [ "[", display, "]", "(", url, ")" ]

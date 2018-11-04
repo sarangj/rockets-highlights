@@ -1,8 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-module Reddit.RocketsHighlight (findAll) where
+module Reddit.RocketsHighlight
+  ( doSearch
+  , SearchResult(..)
+  ) where
 
-import Prelude 
+import Prelude
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Default
@@ -21,16 +24,24 @@ import Reddit.Types.Reddit (RedditT)
 import Reddit
 import RosterFetcher.Fetch
 
-findAll :: MonadIO m => RedditT m [Post]
-findAll = fromMaybe [] <$> (mapM findAfter =<< latestLikelyGameThread)
+data SearchResult
+  = HighlightsFor Reddit.Post [Reddit.Post]
+  | Empty
+
+doSearch :: MonadIO m => RedditT m SearchResult
+doSearch = do
+  gameThread <- latestLikelyGameThread
+  case gameThread of
+    Nothing -> pure Empty
+    Just gt -> HighlightsFor gt <$> findAfter (Reddit.postID gt)
 
 findAfter
-  :: MonadIO m 
+  :: MonadIO m
   => Reddit.PostID
   -> RedditT m [Reddit.Post]
 findAfter postID = do
-  posts <- Reddit.contents <$> Reddit.getPosts' options Reddit.New sr 
-  case posts of 
+  posts <- Reddit.contents <$> Reddit.getPosts' options Reddit.New sr
+  case posts of
     [] -> pure []
     (p:_) -> mappend (filter likelyRocketsHighlight posts) <$> findAfter (Reddit.postID p)
     where
@@ -40,11 +51,10 @@ findAfter postID = do
         }
       sr = Just Constants.nbaSubreddit
 
-latestLikelyGameThread :: Monad m => RedditT m (Maybe Reddit.PostID)
-latestLikelyGameThread = do 
-  post <- firstCandidate <$> RedditSearch.search sr def RedditSearch.New search
-  pure $ Reddit.postID <$> post 
-  where 
+latestLikelyGameThread :: Monad m => RedditT m (Maybe Reddit.Post)
+latestLikelyGameThread =
+  firstCandidate <$> RedditSearch.search sr def RedditSearch.New search
+  where
     search = "Game Thread Rockets"
     sr = Just Constants.nbaSubreddit
     firstCandidate :: PostListing -> Maybe Post
@@ -55,8 +65,8 @@ likelyRocketsHighlight p = (isStreamable p || isHighlight p)
   && (titleLikelyRocketsRelated $ Text.toLower (Reddit.title p))
 
 titleLikelyRocketsRelated :: Text -> Bool
-titleLikelyRocketsRelated title = 
-  Text.isInfixOf "rockets" title 
+titleLikelyRocketsRelated title =
+  Text.isInfixOf "rockets" title
   || titleHasNameMatch title
 
 titleHasNameMatch :: Text -> Bool
@@ -67,14 +77,14 @@ isStreamable = (=="streamable.com") . Reddit.domain
 
 isHighlight :: Reddit.Post -> Bool
 isHighlight = (== (Just "highlights")) . Reddit.flairClass
--- | 
+-- |
 -- I *could* autogenerate the roster using `RosterFetcher.fetch`, but some names
 -- require full name matching (e.g. Chris Paul) while others do not (Harden).
 -- The below are hardcoded based on intution.
--- We can still use RosterFetcher.fetch to help update this in the future, 
+-- We can still use RosterFetcher.fetch to help update this in the future,
 -- though I may just make that a standalone library.
 matchableNames :: [Text]
-matchableNames = 
+matchableNames =
   [ "ariza"
   , "rj hunter"
   , "chris paul"
