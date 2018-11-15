@@ -102,5 +102,5 @@ matchableNames =
   , "capela"
   , "pj tucker"
   , "nene"
-  , "Hartenstein"
+  , "hartenstein"
   ]
