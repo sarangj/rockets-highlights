@@ -5,6 +5,7 @@ module Run
   ) where
 
 import Data.Monoid ((<>))
+import qualified Data.Text as Text
 import qualified Reddit.Config as Config
 import Reddit.RocketsHighlight (SearchResult(..))
 import qualified Reddit.RocketsHighlight as RocketsHighlight
@@ -42,7 +43,10 @@ submitPosts gameThread highlights = do
   postResult <- User.run $ mkPost targetSR gameThread highlights
   case postResult of
     Left apiError -> putStrLn $ show apiError
-    Right postID -> putStrLn $ "Submitted " <> (show postID)
+    Right postID -> putStrLn $ "Submitted " <> (postLink postID)
 
 displayPost :: Reddit.Post -> IO ()
 displayPost = putStrLn . show . mappend "reddit.com" . Reddit.permalink
+
+postLink :: Reddit.PostID -> String
+postLink (Reddit.PostID p) = "reddit.com/r/sarangscoolstuff/comments/" <> (Text.unpack p)
