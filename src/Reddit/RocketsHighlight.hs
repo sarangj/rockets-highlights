@@ -85,17 +85,20 @@ isHighlight = (== (Just "highlights")) . Reddit.flairClass
 -- though I may just make that a standalone library.
 matchableNames :: [Text]
 matchableNames =
-  [ "chriss"
+  [ "austin rivers"
+  , "chriss"
   , "carter-williams"
   , "brandon knight"
   , "chris paul"
   , "cp3"
+  , "danuel house"
   , "gary clark"
   , "melo"
   , "ennis"
   , "zhou"
   , "qi"
   , "eric gordon"
+  , "vince edwards"
   , "vincent edwards"
   , "harden"
   , "gerald green"
